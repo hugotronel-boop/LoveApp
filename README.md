@@ -1,2 +1,0 @@
-# LoveApp
-Pour nous 
