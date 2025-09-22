@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notre App d'Amour</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Fredoka One', cursive; }
+body { min-height:100vh; overflow-x:hidden; color:#fff; }
+
+/* Pages */
+.page { display:none; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:50px 20px; background:linear-gradient(135deg, #ff9a9e 0%, #ff6f61 50%, #ffb347 100%); transition:opacity 0.3s; }
+.page.active { display:flex; }
+
+/* Titres */
+h1 { font-size:3em; margin-bottom:30px; text-shadow:3px 3px #ff6f61; text-align:center; animation:pulse 2s infinite; }
+@keyframes pulse { 0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);} }
+
+/* Compteur */
+.love-counter { background:linear-gradient(135deg, #ff6f61, #ff9a9e); padding:50px 40px; border-radius:30px; text-align:center; font-size:2.5em; box-shadow:0 10px 20px rgba(0,0,0,0.25); margin-bottom:50px; transition: transform 0.2s, box-shadow 0.2s; cursor:pointer; position:relative; z-index:1; }
+.love-counter:hover { transform: scale(1.07); box-shadow:0 15px 25px rgba(0,0,0,0.35); }
+
+/* Menu boutons */
+.menu-buttons { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; z-index:1; position:relative; }
+.menu-buttons button { background:linear-gradient(135deg, #ffb347, #ff6f61); border:none; padding:25px 35px; border-radius:20px; font-size:1.3em; color:#fff; cursor:pointer; box-shadow:0 8px 15px rgba(0,0,0,0.25); transition:all 0.3s; display:flex; flex-direction:column; align-items:center; }
+.menu-buttons button:hover { transform:translateY(-7px) rotate(-2deg); background:linear-gradient(135deg,#ff6f61,#ffb347); box-shadow:0 12px 20px rgba(0,0,0,0.35); }
+.menu-buttons button span { font-size:2em; margin-bottom:8px; }
+
+/* Étoiles */
+.star { position:absolute; pointer-events:none; animation:shoot 0.8s forwards; }
+@keyframes shoot { 0%{opacity:1; transform:translate(0,0) scale(1);}100%{opacity:0; transform:translate(var(--x), var(--y)) scale(0.5);} }
+
+/* Page message secret */
+#messagePage textarea { width:100%; max-width:500px; padding:15px; border-radius:15px; border:none; font-size:1em; resize:none; margin-bottom:15px; }
+#messagePage button { padding:12px 25px; border-radius:15px; border:none; font-size:1em; cursor:pointer; background:linear-gradient(135deg,#ffb347,#ff6f61); color:#fff; box-shadow:0 5px 10px rgba(0,0,0,0.2); transition:all 0.3s; margin-bottom:15px; }
+#messagePage button:hover { transform:translateY(-3px); }
+#showRandom { display:none; margin-top:15px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.1); box-shadow:0 5px 15px rgba(0,0,0,0.25); text-align:center; font-size:1.2em; }
+
+@keyframes flyEnvelope { 0%{transform:translateY(0) scale(1); opacity:1;}50%{transform:translateY(-150px) scale(1.2); opacity:0.8;}100%{transform:translateY(-300px) scale(0.5); opacity:0;} }
+.flyingEnvelope { position:fixed; left:50%; bottom:120px; transform:translateX(-50%); font-size:2em; animation:flyEnvelope 1.2s forwards; pointer-events:none; z-index:1000; }
+
+.backBtn { margin-top:20px; padding:10px 20px; border-radius:15px; border:none; font-size:1em; cursor:pointer; background:linear-gradient(135deg,#ffb347,#ff6f61); color:#fff; box-shadow:0 5px 10px rgba(0,0,0,0.2); }
+.backBtn:hover { background:linear-gradient(135deg,#ff6f61,#ffb347); transform:translateY(-3px); }
+
+/* Page Souvenirs */
+.timeline {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.souvenir {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.5s forwards;
+}
+
+.souvenir img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.souvenir img:hover {
+  transform: scale(1.1);
+}
+
+.souvenir span.date {
+  font-size: 0.9em;
+  color: #ffd1d1;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+}
+
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+.add-souvenir {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.add-souvenir input, .add-souvenir button {
+  padding: 12px 15px;
+  border-radius: 15px;
+  border: none;
+  font-size: 1em;
+}
+
+.add-souvenir input[type="text"] { width: 80%; }
+.add-souvenir input[type="date"] { width: 50%; }
+.add-souvenir input[type="file"] { width: 80%; color: #fff; }
+
+.add-souvenir button {
+  background: linear-gradient(135deg, #ffb347, #ff6f61);
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.add-souvenir button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+}
+
+.heart {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 20px;
+  animation: heartPop 0.8s forwards;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(0); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.overlay img {
+  max-width: 90%;
+  max-height: 70%;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.5);
+}
+
+.overlay button {
+  padding: 10px 20px;
+  border-radius: 15px;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ffb347, #ff6f61);
+  color: #fff;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.overlay button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+}
+
+/* Page Roue de l'amour */
+#wheel {
+  width:300px;
+  height:300px;
+  border-radius:50%;
+  position:relative;
+  border:5px solid #fff;
+  margin-bottom:20px;
+  background: conic-gradient(
+    #ff9a9e 0deg 72deg,
+    #ffb347 72deg 144deg,
+    #ff6f61 144deg 216deg,
+    #ff3d5a 216deg 288deg,
+    #7be495 288deg 360deg
+  );
+  transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Emojis centrés dans leur secteur */
+.emoji {
+  position: absolute;
+  font-size:2em;
+  transform: translate(-50%, -50%);
+}
+
+.e1 { top: 25%; left: 50%; }    /* secteur 1 */
+.e2 { top: 40%; left: 82%; }    /* secteur 2 */
+.e3 { top: 65%; left: 68%; }    /* secteur 3 */
+.e4 { top: 65%; left: 32%; }    /* secteur 4 */
+.e5 { top: 40%; left: 18%; }    /* secteur 5 */
+
+/* Flèche */
+#pointer {
+  width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent;
+  border-bottom:30px solid #fff; margin-bottom:10px;
+}
+
+/* Bouton tourner */
+#spinBtn {
+  padding:15px 30px; border-radius:20px; border:none; font-size:1.2em; cursor:pointer;
+  background:linear-gradient(135deg,#ffb347,#ff6f61); color:#fff; box-shadow:0 5px 10px rgba(0,0,0,0.2);
+  margin-bottom:20px; transition:all 0.3s;
+}
+#spinBtn:hover { transform:translateY(-3px); background:linear-gradient(135deg,#ff6f61,#ffb347); }
+
+/* Popup défi */
+#challenge {
+  display:none; flex-direction:column; align-items:center; gap:15px;
+  background: rgba(255,255,255,0.1); padding:20px; border-radius:20px;
+  text-align:center; max-width:350px; font-size:1.1em; box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+#challenge button {
+  padding:10px 20px; border-radius:15px; border:none; font-size:1em; cursor:pointer;
+  background:linear-gradient(135deg,#ffb347,#ff6f61); color:#fff;
+  box-shadow:0 5px 10px rgba(0,0,0,0.2);
+}
+#challenge button:hover { background:linear-gradient(135deg,#ff6f61,#ffb347); transform:translateY(-3px); }
+</style>
+</head>
+<body>
+
+<!-- Page accueil -->
+<div id="homePage" class="page active">
+  <h1>Fun & Love🌞</h1>
+  <div class="love-counter" id="loveCounter">0 jours ensemble</div>
+  <div class="menu-buttons">
+    <button id="msgSecretBtn"><span>💌</span>Message secret</button>
+    <button id="souvenirBtn"><span>📸</span>Souvenirs</button>
+    <button id="roueBtn"><span>🎡</span>Roue de l'amour</button>
+  </div>
+</div>
+
+<!-- Page message secret -->
+<div id="messagePage" class="page">
+  <h1>Message secret 💌</h1>
+  <textarea id="msgInput" placeholder="Écris ton mot..."></textarea>
+  <button id="sendBtn">Envoyer 💌</button>
+  <button id="randBtn">Mot aléatoire 🎲</button>
+  <div id="showRandom"></div>
+  <button class="backBtn" id="backHomeMsg">← Retour</button>
+</div>
+
+<!-- Page Souvenirs -->
+<div id="souvenirPage" class="page">
+  <h1>Souvenirs 💖</h1>
+
+  <div class="timeline" id="timeline"></div>
+
+  <div class="add-souvenir">
+    <input type="text" id="souvenirText" placeholder="Écris ton souvenir ici...">
+    <input type="date" id="souvenirDate">
+    <input type="file" id="souvenirImage" accept="image/*">
+    <button id="addButton">Ajouter</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <img id="overlayImg" src="">
+    <div>
+      <button id="downloadBtn">Télécharger</button>
+      <button id="closeOverlay">Fermer</button>
+    </div>
+  </div>
+  
+  <button class="backBtn" id="backHomeSouvenir">← Retour</button>
+</div>
+
+<!-- Page Roue de l'amour -->
+<div id="rouePage" class="page">
+  <h1>Roue de l'amour 🎡</h1>
+
+  <div id="wheel">
+    <div class="emoji e1"></div>
+    <div class="emoji e2"></div>
+    <div class="emoji e3"></div>
+    <div class="emoji e4"></div>
+    <div class="emoji e5"></div>
+  </div>
+
+  <div id="pointer"></div>
+
+  <button id="spinBtn">Tourner la roue 🎡</button>
+
+  <div id="challenge">
+    <div id="challengeText"></div>
+    <button id="closeChallenge">Fermer</button>
+  </div>
+  
+  <button class="backBtn" id="backHomeRoue">← Retour</button>
+</div>
+
+<script>
+// Pages
+const homePage = document.getElementById("homePage");
+const messagePage = document.getElementById("messagePage");
+const souvenirPage = document.getElementById("souvenirPage");
+const rouePage = document.getElementById("rouePage");
+
+// Navigation
+document.getElementById("msgSecretBtn").addEventListener("click", () => {
+  homePage.classList.remove("active");
+  messagePage.classList.add("active");
+});
+
+document.getElementById("souvenirBtn").addEventListener("click", () => {
+  homePage.classList.remove("active");
+  souvenirPage.classList.add("active");
+});
+
+document.getElementById("roueBtn").addEventListener("click", () => {
+  homePage.classList.remove("active");
+  rouePage.classList.add("active");
+});
+
+// Boutons retour
+document.getElementById("backHomeMsg").addEventListener("click", () => {
+  messagePage.classList.remove("active");
+  homePage.classList.add("active");
+});
+
+document.getElementById("backHomeSouvenir").addEventListener("click", () => {
+  souvenirPage.classList.remove("active");
+  homePage.classList.add("active");
+});
+
+document.getElementById("backHomeRoue").addEventListener("click", () => {
+  rouePage.classList.remove("active");
+  homePage.classList.add("active");
+});
+
+// Compteur avec date de début
+const startDate = new Date("2025-05-16"); // ta date du début
+const counter = document.getElementById("loveCounter");
+
+function updateCounter() {
+  const today = new Date();
+  const diffTime = today - startDate; // différence en ms
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // convertit en jours
+  counter.innerText = `${diffDays} jours ensemble 💕`;
+}
+
+// Met à jour le compteur au chargement
+updateCounter();counter.addEventListener("click", () => {
+  const rect = counter.getBoundingClientRect();
+  for(let i=0;i<30;i++){
+    const star=document.createElement("div");
+    star.classList.add("star"); star.innerText="✨";
+    const startX=Math.random()*rect.width; const startY=Math.random()*rect.height;
+    star.style.left=startX+"px"; star.style.top=startY+"px";
+    const size=20+Math.random()*20; star.style.fontSize=size+"px";
+    const colors=["#ff6f61","#ffb347","#ff9a9e","#fff"];
+    star.style.color=colors[Math.floor(Math.random()*colors.length)];
+    const x=(Math.random()-0.5)*400+"px";
+    const y=(Math.random()-0.5)*-400+"px"; star.style.setProperty("--x",x); star.style.setProperty("--y",y);
+    counter.appendChild(star);
+    setTimeout(()=>star.remove(),800);
+  }
+  counter.style.transform="scale(1.15)";
+  setTimeout(()=>counter.style.transform="scale(1)",200);
+});
+
+// Messages secrets
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+const randBtn = document.getElementById("randBtn");
+const showRandom = document.getElementById("showRandom");
+let messages = [];
+
+function sendEnvelope() {
+  const env = document.createElement("div");
+  env.className = "flyingEnvelope"; env.innerText="✉️";
+  document.body.appendChild(env);
+  env.addEventListener("animationend",()=>env.remove());
+}
+
+sendBtn.addEventListener("click", () => {
+  const text = msgInput.value.trim();
+  if(!text) return;
+  messages.push(text); sendEnvelope(); msgInput.value=""; msgInput.focus();
+});
+
+randBtn.addEventListener("click", () => {
+  if(messages.length===0){ alert("Aucun mot pour l'instant 😅"); return; }
+  const randIndex=Math.floor(Math.random()*messages.length);
+  showRandom.innerText = messages[randIndex]; showRandom.style.display="block";
+});
+
+// Souvenirs
+const timeline = document.getElementById("timeline");
+const addButton = document.getElementById("addButton");
+const souvenirText = document.getElementById("souvenirText");
+const souvenirDate = document.getElementById("souvenirDate");
+const souvenirImage = document.getElementById("souvenirImage");
+const overlay = document.getElementById("overlay");
+const overlayImg = document.getElementById("overlayImg");
+const closeOverlay = document.getElementById("closeOverlay");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let souvenirs = [];
+
+function renderTimeline() {
+  timeline.innerHTML = "";
+  // Trier les souvenirs par date croissante
+  souvenirs.sort((a,b) => new Date(a.date) - new Date(b.date));
+  souvenirs.forEach(item => {
+    const div = document.createElement("div");
+    div.classList.add("souvenir");
+
+    if(item.imgSrc){
+      const img = document.createElement("img");
+      img.src = item.imgSrc;
+      img.addEventListener("click", () => {
+        overlayImg.src = item.imgSrc;
+        overlay.style.display = "flex";
+      });
+      div.appendChild(img);
+    }
+
+    const textNode = document.createElement("div");
+    textNode.innerText = item.text;
+    div.appendChild(textNode);
+
+    const dateNode = document.createElement("span");
+    dateNode.classList.add("date");
+    dateNode.innerText = item.date;
+    div.appendChild(dateNode);
+
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.innerText = "💖";
+    div.appendChild(heart);
+
+    timeline.appendChild(div);
+  });
+}
+
+addButton.addEventListener("click", () => {
+  const text = souvenirText.value.trim();
+  const date = souvenirDate.value;
+  const file = souvenirImage.files[0];
+
+  if(text && date){
+    if(file){
+      const reader = new FileReader();
+      reader.onload = function(e){
+        souvenirs.push({text, date, imgSrc: e.target.result});
+        renderTimeline();
+      }
+      reader.readAsDataURL(file);
+    } else {
+      souvenirs.push({text, date, imgSrc: null});
+      renderTimeline();
+    }
+    souvenirText.value = "";
+    souvenirDate.value = "";
+    souvenirImage.value = "";
+  }
+});
+
+closeOverlay.addEventListener("click", () => overlay.style.display = "none");
+
+downloadBtn.addEventListener("click", () => {
+  const link = document.createElement("a");
+  link.href = overlayImg.src;
+  link.download = "souvenir.png";
+  link.click();
+});
+
+// Roue de l'amour
+const wheel = document.getElementById("wheel");
+const spinBtn = document.getElementById("spinBtn");
+const challenge = document.getElementById("challenge");
+const challengeText = document.getElementById("challengeText");
+const closeChallenge = document.getElementById("closeChallenge");
+
+const challenges = {
+  "💖": ["Câlin 30s","Mot doux","Regardez 1min","Massage mains/pieds"],
+  "😂": ["Imitation","Premier qui rit perd","Danse ridicule","Chante un couplet"],
+  "🍽️": ["Choisir dessert","Préparer café","Gourmandise surprise","Cuisine ensemble"],
+  "🔥": ["Massage","Bisou interdit","Compliment coquin","Câlin 10min"],
+  "🤝": ["Corvée","Faire une course","Lave-vaisselle","Moment à deux"]
+};
+
+let spinning = false;
+let currentRotation = 0;
+
+spinBtn.addEventListener("click", () => {
+  if(spinning) return;
+  spinning = true;
+
+  const randomExtra = Math.floor(Math.random()*360);
+  const fullSpins = 4*360;
+  const targetRotation = fullSpins + randomExtra;
+  currentRotation += targetRotation;
+
+  wheel.style.transition = "transform 4s cubic-bezier(0.33,1,0.68,1)";
+  wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    wheel.style.transition = "transform 0.3s ease-out";
+    wheel.style.transform = `rotate(${currentRotation-10}deg)`;
+    setTimeout(() => {
+      wheel.style.transition = "transform 0.3s ease-in";
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+    },300);
+
+    const finalDeg = currentRotation % 360;
+    const sectorDeg = 360 / 5;
+    const sectorIndex = Math.floor(finalDeg / sectorDeg);
+    const keys = Object.keys(challenges);
+    const selectedCategory = keys[(5 - sectorIndex) % 5];
+
+    const items = challenges[selectedCategory];
+    const selectedChallenge = items[Math.floor(Math.random()*items.length)];
+
+    challengeText.innerText = `${selectedCategory} : ${selectedChallenge}`;
+    challenge.style.display = "flex";
+    spinning = false;
+  },4000);
+});
+
+closeChallenge.addEventListener("click", () => { challenge.style.display = "none"; });
+</script>
+
+</body>
+</html>
